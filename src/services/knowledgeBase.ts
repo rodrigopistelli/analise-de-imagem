@@ -4,8 +4,10 @@ export interface KnowledgeEntry {
   id: string
   name: string
   description: string
+  type: 'object' | 'person'
   dataUrl: string
   hash: string
+  faceDescriptor?: number[]
   createdAt: number
 }
 
@@ -27,14 +29,22 @@ function openDb(): Promise<IDBDatabase> {
   })
 }
 
-export async function saveEntry(entry: Omit<KnowledgeEntry, 'id' | 'hash' | 'createdAt'> & { dataUrl: string }): Promise<KnowledgeEntry> {
+export async function saveEntry(entry: {
+  name: string
+  description: string
+  type?: 'object' | 'person'
+  dataUrl: string
+  faceDescriptor?: number[]
+}): Promise<KnowledgeEntry> {
   const hash = await computeHash(entry.dataUrl)
   const full: KnowledgeEntry = {
     id: 'kb_' + Math.random().toString(36).slice(2) + Date.now().toString(36),
     name: entry.name,
     description: entry.description,
+    type: entry.type || 'object',
     dataUrl: entry.dataUrl,
     hash,
+    faceDescriptor: entry.faceDescriptor,
     createdAt: Date.now(),
   }
   const db = await openDb()

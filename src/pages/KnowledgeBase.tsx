@@ -7,6 +7,7 @@ import {
   saveEntry,
   type KnowledgeEntry,
 } from '../services/knowledgeBase'
+import { detectFaces, loadFaceModels, type DetectedFace } from '../services/faceRecognition'
 
 export default function KnowledgeBase() {
   const fileRef = useRef<HTMLInputElement>(null)
@@ -18,6 +19,10 @@ export default function KnowledgeBase() {
   const [desc, setDesc] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [faces, setFaces] = useState<DetectedFace[]>([])
+  const [detecting, setDetecting] = useState(false)
+  const [isPerson, setIsPerson] = useState(false)
+  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -42,9 +47,28 @@ export default function KnowledgeBase() {
     }
     try {
       setError(null)
+      setFaces([])
+      setFaceDescriptor(null)
+      setIsPerson(false)
       const du = await fileToDataUrl(f)
       const r = await resizeToDataUrl(du, 512, 'image/png')
       setImage(r.dataUrl)
+
+      // Detecta rostos (se modelos carregados)
+      setDetecting(true)
+      try {
+        await loadFaceModels()
+        const detected = await detectFaces(r.dataUrl)
+        setFaces(detected)
+        if (detected.length > 0) {
+          setFaceDescriptor(detected[0].descriptor)
+          setIsPerson(true)
+        }
+      } catch (e) {
+        console.warn('Face detection failed', e)
+      } finally {
+        setDetecting(false)
+      }
     } catch (e) {
       setError('Falha ao carregar a imagem: ' + (e as Error).message)
     }
@@ -58,7 +82,13 @@ export default function KnowledgeBase() {
     setSaving(true)
     setError(null)
     try {
-      const entry = await saveEntry({ name: name.trim(), description: desc.trim(), dataUrl: image })
+      const entry = await saveEntry({
+        name: name.trim(),
+        description: desc.trim(),
+        type: isPerson ? 'person' : 'object',
+        dataUrl: image,
+        faceDescriptor: isPerson ? (faceDescriptor ?? undefined) : undefined,
+      })
       setEntries((prev) => [entry, ...prev])
       setImage(null)
       setName('')
@@ -128,6 +158,27 @@ export default function KnowledgeBase() {
                 <p>Selecione uma imagem</p>
               </div>
             )}
+            {detecting && (
+              <p className="desc">Detectando rostos…</p>
+            )}
+            {!detecting && faces.length > 0 && (
+              <p className="desc" style={{ color: 'var(--primary)' }}>
+                👤 Rosto detectado ({faces.length}). Expressão: {faces[0].expressionLabel}.
+              </p>
+            )}
+            {!detecting && faces.length === 0 && image && (
+              <p className="desc">Nenhum rosto detectado — cadastro como objeto.</p>
+            )}
+            {image && faces.length > 0 && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={isPerson}
+                  onChange={(e) => setIsPerson(e.target.checked)}
+                />
+                Cadastrar como pessoa (reconhecimento facial)
+              </label>
+            )}
             {image && (
               <button className="btn small" onClick={() => fileRef.current?.click()}>
                 Trocar imagem
@@ -173,9 +224,12 @@ export default function KnowledgeBase() {
           <div className="card" key={e.id}>
             {e.dataUrl && <img src={e.dataUrl} alt={e.name} className="card-img" />}
             <div className="card-body">
-              <h3>{e.name}</h3>
+              <h3>
+                {e.type === 'person' ? '👤 ' : ''}{e.name}
+              </h3>
               {e.description && <p className="desc">{e.description}</p>}
               <small style={{ color: 'var(--muted)' }}>
+                {e.type === 'person' ? 'Pessoa (face) · ' : 'Objeto · '}
                 {new Date(e.createdAt).toLocaleDateString('pt-BR')}
               </small>
               <div className="card-actions">

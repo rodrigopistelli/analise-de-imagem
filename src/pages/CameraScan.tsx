@@ -13,8 +13,9 @@ import {
   readPlateFromImage,
 } from '../services/plate'
 import { computeHash } from '../services/imageHash'
-import { findBestMatch } from '../services/knowledgeBase'
+import { findBestMatch, listEntries } from '../services/knowledgeBase'
 import type { KnowledgeEntry } from '../services/knowledgeBase'
+import { detectFaces, matchFaces, loadFaceModels } from '../services/faceRecognition'
 
 interface ScanInfo {
   name: string
@@ -26,6 +27,7 @@ interface ScanInfo {
   status: string
   plate: string | null
   knowledgeMatch: KnowledgeEntry | null
+  identifiedPersons: KnowledgeEntry[]
   factory: FactoryProduct | null
 }
 
@@ -150,6 +152,20 @@ export default function CameraScan() {
       const hash = await computeHash(dataUrl)
       const knowledgeMatch = await findBestMatch(hash)
 
+      // Reconhecimento facial: detecta rostos e identifica pessoas cadastradas.
+      let identifiedPersons: KnowledgeEntry[] = []
+      try {
+        await loadFaceModels()
+        const faces = await detectFaces(dataUrl)
+        if (faces.length > 0) {
+          const entries = await listEntries()
+          const matches = matchFaces(faces, entries)
+          identifiedPersons = matches.map((m) => m.entry as KnowledgeEntry)
+        }
+      } catch (e) {
+        console.warn('Face recognition failed', e)
+      }
+
       const finalName = knowledgeMatch ? knowledgeMatch.name : (rec.name?.trim() || ocrClean || fp.name)
       const finalCaption = knowledgeMatch
         ? (knowledgeMatch.description || rec.caption)
@@ -165,6 +181,7 @@ export default function CameraScan() {
         status: rec.status,
         plate,
         knowledgeMatch,
+        identifiedPersons,
         factory: hasImage ? fp : null,
       })
     } catch (e) {
@@ -339,6 +356,32 @@ export default function CameraScan() {
                 <small style={{ color: 'var(--muted)' }}>
                   Esta imagem foi reconhecida na base de conhecimento local.
                 </small>
+              </div>
+            </section>
+          )}
+          {info?.identifiedPersons && info.identifiedPersons.length > 0 && (
+            <section className="panel">
+              <h2>Pessoa identificada</h2>
+              <div className="form">
+                {info.identifiedPersons.map((p) => (
+                  <div key={p.id} className="factory-box" style={{ marginTop: 0 }}>
+                    {p.dataUrl && (
+                      <img
+                        src={p.dataUrl}
+                        alt={p.name}
+                        className="result-img"
+                        style={{ maxHeight: 160 }}
+                      />
+                    )}
+                    <p className="desc">
+                      <strong>{p.name}</strong>
+                    </p>
+                    {p.description && <p className="desc">{p.description}</p>}
+                    <small style={{ color: 'var(--muted)' }}>
+                      Reconhecimento facial (base de conhecimento local).
+                    </small>
+                  </div>
+                ))}
               </div>
             </section>
           )}
