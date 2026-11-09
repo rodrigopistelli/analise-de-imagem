@@ -99,6 +99,7 @@ export async function recognizeProduct(dataUrl: string): Promise<Recognition> {
   }
 
   // mock fallback
+  console.warn('recognizeProduct: todos os provedores falharam, usando mock. Erros:', errors)
   const caption = MOCK_CAPTIONS[Math.floor(Math.random() * MOCK_CAPTIONS.length)]
   return buildRecognition(caption, 'mock', errors.join(' | ') || 'fallback')
 }

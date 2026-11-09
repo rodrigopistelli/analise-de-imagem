@@ -19,6 +19,7 @@ interface ScanInfo {
   format: string
   caption: string
   expression: string | null
+  provider: string
   plate: string | null
   factory: FactoryProduct | null
 }
@@ -146,6 +147,7 @@ export default function CameraScan() {
         format,
         caption: rec.caption,
         expression: rec.expression?.trim() || null,
+        provider: rec.provider,
         plate,
         factory: hasImage ? fp : null,
       })
@@ -281,6 +283,12 @@ export default function CameraScan() {
                     <label>Feição / Expressão</label>
                     <input value={info.expression} readOnly />
                   </>
+                )}
+                {info.provider === 'mock' && (
+                  <p className="desc" style={{ color: 'var(--danger)' }}>
+                    ⚠️ Reconhecimento por IA indisponível (modo local). Verifique a conexão com a
+                    internet e as chaves de IA no Vercel. O resultado acima é genérico.
+                  </p>
                 )}
               </div>
             ) : (
