@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Camera, Package } from 'lucide-react'
+import { Camera } from 'lucide-react'
 
 export default function Home() {
   return (
     <div className="page">
       <h1>Bem-vindo à Análise de imagem</h1>
-      <p className="subtitle">Transforme fotos de produtos em mostruários digitais.</p>
 
       <div className="panel" style={{ marginBottom: 16 }}>
         <h2>Sobre o aplicativo</h2>
@@ -34,13 +33,8 @@ export default function Home() {
       <div className="grid two">
         <div className="panel">
           <h2><Camera size={18} /> Análise de imagens</h2>
-          <p>Carregue uma foto ou use a câmera, descreva o produto e busque a embalagem original de fábrica.</p>
+          <p>Carregue uma foto ou use a câmera</p>
           <Link className="btn primary" to="/camera">Abrir Análise de imagens</Link>
-        </div>
-        <div className="panel">
-          <h2><Package size={18} /> Galeria</h2>
-          <p>Produtos já analisados.</p>
-          <Link className="btn" to="/galeria">Abrir Galeria</Link>
         </div>
       </div>
     </div>
