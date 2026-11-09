@@ -15,20 +15,35 @@ body {
   background: var(--bg);
   color: var(--text);
 }
-.layout { display: flex; min-height: 100vh; }
+.layout { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
 .sidebar {
-  width: 220px; background: var(--card); border-right: 1px solid var(--border);
-  padding: 20px 12px; display: flex; flex-direction: column; gap: 16px;
+  width: 100%; background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 12px; display: flex; flex-direction: row; align-items: center; gap: 12px;
+  flex-wrap: wrap; position: sticky; top: 0; z-index: 40;
 }
-.sidebar .brand { font-weight: 700; font-size: 18px; padding: 0 8px; }
-.sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+.sidebar .brand { font-weight: 700; font-size: 16px; white-space: nowrap; }
+.sidebar nav { display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap; flex: 1; justify-content: flex-end; }
 .sidebar nav a {
-  color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 8px;
-  padding: 8px; border-radius: 8px; font-size: 14px;
+  color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 8px; font-size: 13px; white-space: nowrap;
 }
 .sidebar nav a:hover, .sidebar nav a.active { color: var(--text); background: #23262f; }
-.content { flex: 1; padding: 24px; }
-.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.content { flex: 1; padding: 16px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+
+@media (min-width: 768px) {
+  .layout { flex-direction: row; }
+  .sidebar {
+    width: 220px; border-right: 1px solid var(--border); border-bottom: none;
+    padding: 20px 12px; flex-direction: column; align-items: stretch; flex-wrap: nowrap;
+    position: static;
+  }
+  .sidebar .brand { font-size: 18px; }
+  .sidebar nav { flex-direction: column; flex: none; justify-content: flex-start; }
+  .sidebar nav a { font-size: 14px; padding: 8px; }
+  .content { padding: 24px; }
+  .container { padding: 24px; }
+}
 .page h1 { margin: 0 0 6px; }
 .subtitle { color: var(--muted); margin: 0 0 20px; }
 .panel {
@@ -41,7 +56,16 @@ body {
 .inline-fields > div { display: flex; flex-direction: column; gap: 8px; }
 .plate-value { letter-spacing: 3px; font-weight: 700; text-transform: uppercase; }
 details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
-@media (max-width: 520px) { .inline-fields { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .page h1 { font-size: 20px; }
+  .panel { padding: 12px; }
+  .row .btn { flex: 1 1 100%; justify-content: center; }
+  .btn { font-size: 13px; padding: 10px 12px; }
+  .placeholder { padding: 16px; }
+  .center { padding: 16px; }
+  .camera-zone { min-height: 200px; }
+  .upload-zone { min-height: 200px; padding: 16px; }
+}
 .grid.two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 @media (max-width: 768px) { .grid.two { grid-template-columns: 1fr; } }
 .upload-zone {
@@ -77,10 +101,11 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 .form label { font-size: 13px; color: var(--muted); }
 .form input, .form textarea {
   background: #0f1115; border: 1px solid var(--border); color: var(--text);
-  padding: 8px; border-radius: 8px; font-family: inherit;
+  padding: 10px 12px; border-radius: 8px; font-family: inherit; font-size: 16px;
+  width: 100%;
 }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
-.placeholder { color: var(--muted); padding: 40px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; }
+.placeholder { color: var(--muted); padding: 24px 16px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; font-size: 14px; }
 .center { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 40px; }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -103,17 +128,24 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 .camera-video-live { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
 .camera-frame { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
 .camera-modal {
-  position: fixed; inset: 0; z-index: 50; padding: 16px;
-  background: rgba(0, 0, 0, .75);
-  display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: 50; padding: 0;
+  background: rgba(0, 0, 0, .85);
+  display: flex; align-items: stretch; justify-content: stretch;
 }
 .camera-box {
-  position: relative; width: min(720px, 100%);
-  background: #000; border: 1px solid var(--border);
-  border-radius: 14px; overflow: hidden;
+  position: relative; width: 100%; height: 100%;
+  background: #000; border: none; border-radius: 0; overflow: hidden;
   display: flex; flex-direction: column;
 }
-.camera-video { width: 100%; max-height: 70vh; object-fit: contain; background: #000; display: block; }
+.camera-video { width: 100%; flex: 1; object-fit: contain; background: #000; display: block; }
+@media (min-width: 768px) {
+  .camera-modal { padding: 16px; align-items: center; justify-content: center; }
+  .camera-box {
+    width: min(720px, 100%); height: auto; max-height: 90vh;
+    border: 1px solid var(--border); border-radius: 14px;
+  }
+  .camera-video { max-height: 70vh; }
+}
 .camera-shutter { margin: 12px; align-self: center; }
 .camera-close { position: absolute; top: 10px; right: 10px; z-index: 2; }
 .result-section { margin-top: 24px; }
