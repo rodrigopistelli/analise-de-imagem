@@ -10,6 +10,19 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: /\.js$/,
+            handler: 'NetworkFirst',
+            options: { cacheName: 'js-cache', expiration: { maxEntries: 50, maxAgeSeconds: 86400 } },
+          },
+          {
+            urlPattern: /\.html$/,
+            handler: 'NetworkFirst',
+            options: { cacheName: 'html-cache' },
+          },
+        ],
       },
       includeAssets: ['favicon.svg', 'robots.txt'],
       manifest: {

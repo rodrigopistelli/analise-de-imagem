@@ -288,10 +288,13 @@ export default function CameraScan() {
                 )}
                 {info.provider === 'mock' && (
                   <p className="desc" style={{ color: 'var(--danger)' }}>
-                    ⚠️ Reconhecimento por IA indisponível (modo local). Verifique a conexão com a
+                    ⚠️ Reconhecimento por IA indisponível (modo local) [v3]. Verifique a conexão com a
                     internet e as chaves de IA no Vercel. O resultado acima é genérico.
                     {info.status && info.status !== 'fallback' && (
                       <><br />Detalhe: {info.status}</>
+                    )}
+                    {(!info.status || info.status === 'fallback') && (
+                      <><br />Detalhe: nenhum erro registrado (verifique o console do navegador).</>
                     )}
                   </p>
                 )}
