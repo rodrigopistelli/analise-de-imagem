@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
-import { Camera, Check, Copy, ImagePlus, RefreshCw, Trash2 } from 'lucide-react'
-import CameraCapture from '../components/CameraCapture'
+import { Check, Copy, ImagePlus, RefreshCw, Trash2 } from 'lucide-react'
 import { fileToDataUrl, resizeToDataUrl } from '../services/image'
 import { recognizeProduct } from '../services/ai'
 import { findFactoryProduct } from '../services/productSearch'
@@ -104,7 +103,6 @@ function sourceLabel(source: FactoryProduct['source']): string {
 
 export default function CameraScan() {
   const fileRef = useRef<HTMLInputElement>(null)
-  const [showCamera, setShowCamera] = useState(false)
   const [image, setImage] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [stage, setStage] = useState('')
@@ -209,11 +207,6 @@ export default function CameraScan() {
     }
   }
 
-  const onCapture = async (f: File) => {
-    setShowCamera(false)
-    await loadImage(f)
-  }
-
   const clear = () => {
     setImage(null)
     setInfo(null)
@@ -269,9 +262,6 @@ export default function CameraScan() {
           </div>
 
           <div className="row" style={{ marginTop: 12 }}>
-            <button className="btn primary" onClick={() => setShowCamera(true)} disabled={analyzing}>
-              <Camera size={16} /> Abrir câmera
-            </button>
             <button className="btn" onClick={() => fileRef.current?.click()} disabled={analyzing}>
               <ImagePlus size={16} /> Carregar imagem
             </button>
@@ -438,9 +428,6 @@ export default function CameraScan() {
         </div>
       </div>
 
-      {showCamera && (
-        <CameraCapture onCapture={(f) => void onCapture(f)} onClose={() => setShowCamera(false)} />
-      )}
     </div>
   )
 }
