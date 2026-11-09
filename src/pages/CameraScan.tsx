@@ -12,6 +12,9 @@ import {
   normalizePlate,
   readPlateFromImage,
 } from '../services/plate'
+import { computeHash } from '../services/imageHash'
+import { findBestMatch } from '../services/knowledgeBase'
+import type { KnowledgeEntry } from '../services/knowledgeBase'
 
 interface ScanInfo {
   name: string
@@ -22,6 +25,7 @@ interface ScanInfo {
   provider: string
   status: string
   plate: string | null
+  knowledgeMatch: KnowledgeEntry | null
   factory: FactoryProduct | null
 }
 
@@ -142,15 +146,25 @@ export default function CameraScan() {
       const hasImage = Boolean(fp.dataUrl || fp.imageUrl)
       const ocrClean = isValidOcrText(ocrRes) ? ocrRes : ''
 
+      // Base de conhecimento: se a imagem for cadastrada, prioriza os dados cadastrados.
+      const hash = await computeHash(dataUrl)
+      const knowledgeMatch = await findBestMatch(hash)
+
+      const finalName = knowledgeMatch ? knowledgeMatch.name : (rec.name?.trim() || ocrClean || fp.name)
+      const finalCaption = knowledgeMatch
+        ? (knowledgeMatch.description || rec.caption)
+        : rec.caption
+
       setInfo({
-        name: rec.name?.trim() || ocrClean || fp.name,
+        name: finalName,
         color: hexToName(avg),
         format,
-        caption: rec.caption,
+        caption: finalCaption,
         expression: rec.expression?.trim() || null,
         provider: rec.provider,
         status: rec.status,
         plate,
+        knowledgeMatch,
         factory: hasImage ? fp : null,
       })
     } catch (e) {
@@ -306,6 +320,28 @@ export default function CameraScan() {
             )}
           </section>
 
+          {info?.knowledgeMatch && (
+            <section className="panel">
+              <h2>Imagem cadastrada</h2>
+              <div className="form">
+                {info.knowledgeMatch.dataUrl && (
+                  <img
+                    src={info.knowledgeMatch.dataUrl}
+                    alt={info.knowledgeMatch.name}
+                    className="result-img"
+                    style={{ maxHeight: 200 }}
+                  />
+                )}
+                <label>Nome cadastrado</label>
+                <input value={info.knowledgeMatch.name} readOnly />
+                <label>Descrição cadastrada</label>
+                <textarea value={info.knowledgeMatch.description} readOnly rows={3} />
+                <small style={{ color: 'var(--muted)' }}>
+                  Esta imagem foi reconhecida na base de conhecimento local.
+                </small>
+              </div>
+            </section>
+          )}
           {info?.plate && (
             <section className="panel">
               <h2>3. Placa detectada</h2>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Camera } from 'lucide-react'
+import { Camera, BookOpen } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -35,6 +35,11 @@ export default function Home() {
           <h2><Camera size={18} /> Análise de imagens</h2>
           <p>Carregue uma foto ou use a câmera</p>
           <Link className="btn primary" to="/camera">Abrir Análise de imagens</Link>
+        </div>
+        <div className="panel">
+          <h2><BookOpen size={18} /> Base de conhecimento</h2>
+          <p>Cadastre imagens com nome e descrição para reconhecimento.</p>
+          <Link className="btn" to="/cadastro">Abrir Base de conhecimento</Link>
         </div>
       </div>
     </div>

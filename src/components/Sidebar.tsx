@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home as HomeIcon, Camera } from 'lucide-react'
+import { Home as HomeIcon, Camera, BookOpen } from 'lucide-react'
 
 export default function Sidebar() {
   return (
@@ -11,6 +11,9 @@ export default function Sidebar() {
         </NavLink>
         <NavLink to="/camera">
           <Camera size={18} /> Análise de imagens
+        </NavLink>
+        <NavLink to="/cadastro">
+          <BookOpen size={18} /> Base de conhecimento
         </NavLink>
       </nav>
     </aside>
