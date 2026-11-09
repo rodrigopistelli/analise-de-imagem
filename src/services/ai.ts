@@ -33,7 +33,7 @@ export async function recognizeProduct(dataUrl: string): Promise<Recognition> {
           parts: [
             { inline_data: { mime_type: 'image/png', data: imgBase64 } },
             {
-              text: "Responda em português, exatamente neste formato:\nNOME: <nome curto do produto, máx. 8 palavras>\nDESCRIÇÃO: <descrição detalhada incluindo marca, tipo, cor e embalagem>\nPLACA: <placa de veículo visível na imagem, apenas letras e números, ou NÃO>\nEXPRESSÃO: <se houver um rosto humano visível, descreva a expressão facial (alegre, triste, neutra, surpresa, brava, etc.) e o sentimento aparente; caso contrário NÃO>\nATIVIDADE: <se houver pessoa, descreva o que ela está fazendo (segurando objeto, passeando, sorrindo, trabalhando, etc.); caso contrário NÃO>",
+              text: "Responda em português, exatamente neste formato:\nNOME: <nome curto do que aparece na imagem, máx. 8 palavras>\nDESCRIÇÃO: <descrição DETALHADA de TUDO que aparece na imagem: pessoas (quantidade, gênero aparente, posição, o que estão fazendo), objetos em primeiro plano e fundo, ambiente, cores, iluminação. Não ignore pessoas mesmo que estejam ao fundo ou parcialmente visíveis.>\nPLACA: <placa de veículo visível na imagem, apenas letras e números, ou NÃO>\nEXPRESSÃO: <se houver um rosto humano visível, descreva a expressão facial (alegre, triste, neutra, surpresa, brava, etc.) e o sentimento aparente; caso contrário NÃO>\nATIVIDADE: <se houver pessoa, descreva o que ela está fazendo (segurando objeto, passeando, sorrindo, trabalhando, sentada, etc.); caso contrário NÃO>",
             },
           ],
         },
