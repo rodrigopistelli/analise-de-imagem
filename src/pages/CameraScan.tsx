@@ -14,7 +14,7 @@ import {
 import { computeHash } from '../services/imageHash'
 import { findBestMatch, listEntries } from '../services/knowledgeBase'
 import type { KnowledgeEntry } from '../services/knowledgeBase'
-import { detectFaces, matchFaces, loadFaceModels } from '../services/faceRecognition'
+import { detectFaces, matchFaces } from '../services/faceRecognition'
 
 interface ScanInfo {
   name: string
@@ -116,10 +116,10 @@ export default function CameraScan() {
     setError(null)
     try {
       setStage('Analisando...')
-      const rec = await recognizeProduct(dataUrl)
-
-      setStage('Analisando imagem...')
-      const ocrRes = await extractTextFromImage(dataUrl)
+      const [rec, ocrRes] = await Promise.all([
+        recognizeProduct(dataUrl),
+        extractTextFromImage(dataUrl),
+      ])
 
       const avg = await averageColor(dataUrl)
       const dims = await imageSize(dataUrl)
@@ -146,22 +146,24 @@ export default function CameraScan() {
       const hasImage = Boolean(fp.dataUrl || fp.imageUrl)
       const ocrClean = isValidOcrText(ocrRes) ? ocrRes : ''
 
-      // Base de conhecimento: se a imagem for cadastrada, prioriza os dados cadastrados.
+      // Base de conhecimento (hash) + reconhecimento facial (só se houver pessoas cadastradas).
       const hash = await computeHash(dataUrl)
+      const entries = await listEntries()
       const knowledgeMatch = await findBestMatch(hash)
 
       // Reconhecimento facial: detecta rostos e identifica pessoas cadastradas.
       let identifiedPersons: KnowledgeEntry[] = []
-      try {
-        await loadFaceModels()
-        const faces = await detectFaces(dataUrl)
-        if (faces.length > 0) {
-          const entries = await listEntries()
-          const matches = matchFaces(faces, entries)
-          identifiedPersons = matches.map((m) => m.entry as KnowledgeEntry)
+      const personEntries = entries.filter((e) => e.type === 'person' && e.faceDescriptor && e.faceDescriptor.length > 0)
+      if (personEntries.length > 0) {
+        try {
+          const faces = await detectFaces(dataUrl)
+          if (faces.length > 0) {
+            const matches = matchFaces(faces, personEntries)
+            identifiedPersons = matches.map((m) => m.entry as KnowledgeEntry)
+          }
+        } catch (e) {
+          console.warn('Face recognition failed', e)
         }
-      } catch (e) {
-        console.warn('Face recognition failed', e)
       }
 
       const finalName = knowledgeMatch ? knowledgeMatch.name : (rec.name?.trim() || ocrClean || fp.name)
@@ -326,6 +328,33 @@ export default function CameraScan() {
               </div>
             )}
           </section>
+
+          {info?.identifiedPersons && info.identifiedPersons.length > 0 && (
+            <section className="panel">
+              <h2>Pessoa identificada</h2>
+              <div className="form">
+                {info.identifiedPersons.map((p) => (
+                  <div key={p.id} className="factory-box" style={{ marginTop: 0 }}>
+                    {p.dataUrl && (
+                      <img
+                        src={p.dataUrl}
+                        alt={p.name}
+                        className="result-img"
+                        style={{ maxHeight: 160 }}
+                      />
+                    )}
+                    <p className="desc">
+                      <strong>{p.name}</strong>
+                    </p>
+                    {p.description && <p className="desc">{p.description}</p>}
+                    <small style={{ color: 'var(--muted)' }}>
+                      Reconhecimento facial (base de conhecimento local).
+                    </small>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {info?.knowledgeMatch && (
             <section className="panel">
