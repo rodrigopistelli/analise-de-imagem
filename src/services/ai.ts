@@ -9,6 +9,7 @@ export interface Recognition {
   status: string
   plate?: string
   expression?: string
+  activity?: string
 }
 
 const MOCK_CAPTIONS = [
@@ -32,7 +33,7 @@ export async function recognizeProduct(dataUrl: string): Promise<Recognition> {
           parts: [
             { inline_data: { mime_type: 'image/png', data: imgBase64 } },
             {
-              text: "Responda em português, exatamente neste formato:\nNOME: <nome curto do produto, máx. 8 palavras>\nDESCRIÇÃO: <descrição detalhada incluindo marca, tipo, cor e embalagem>\nPLACA: <placa de veículo visível na imagem, apenas letras e números, ou NÃO>\nEXPRESSÃO: <se houver um rosto humano visível, descreva a expressão facial (alegre, triste, neutra, surpresa, brava, etc.) e o sentimento aparente; caso contrário NÃO>",
+              text: "Responda em português, exatamente neste formato:\nNOME: <nome curto do produto, máx. 8 palavras>\nDESCRIÇÃO: <descrição detalhada incluindo marca, tipo, cor e embalagem>\nPLACA: <placa de veículo visível na imagem, apenas letras e números, ou NÃO>\nEXPRESSÃO: <se houver um rosto humano visível, descreva a expressão facial (alegre, triste, neutra, surpresa, brava, etc.) e o sentimento aparente; caso contrário NÃO>\nATIVIDADE: <se houver pessoa, descreva o que ela está fazendo (segurando objeto, passeando, sorrindo, trabalhando, etc.); caso contrário NÃO>",
             },
           ],
         },
@@ -54,7 +55,7 @@ export async function recognizeProduct(dataUrl: string): Promise<Recognition> {
             json?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text || '').join(' ').trim() || ''
           if (text) {
             const parsed = parseGemini(text)
-            return buildRecognition(parsed.caption, `gemini:${gm}`, 'ok', parsed.name, parsed.plate, parsed.expression)
+            return buildRecognition(parsed.caption, `gemini:${gm}`, 'ok', parsed.name, parsed.plate, parsed.expression, parsed.activity)
           } else {
             console.warn(`Gemini ${gm} retornou resposta vazia`)
             errors.push(`gemini:${gm}:resposta-vazia`)
@@ -116,20 +117,22 @@ function buildRecognition(
   nameOverride?: string,
   plate?: string,
   expression?: string,
+  activity?: string,
 ): Recognition {
   const clean = caption.replace(/[*#]+/g, ' ').replace(/\s+/g, ' ').trim()
   const words = clean.toLowerCase().split(/\W+/).filter(Boolean)
   const name =
     nameOverride?.trim() || clean.split(/[,.;:\n]/)[0].split(' ').slice(0, 8).join(' ')
   const tags = Array.from(new Set(words.filter((w) => w.length > 3))).slice(0, 8)
-  return { caption: clean, name, tags, provider, status, plate, expression }
+  return { caption: clean, name, tags, provider, status, plate, expression, activity }
 }
 
-function parseGemini(text: string): { name?: string; caption: string; plate?: string; expression?: string } {
+function parseGemini(text: string): { name?: string; caption: string; plate?: string; expression?: string; activity?: string } {
   const nameMatch = text.match(/NOME\s*:\s*(.+)/i)
-  const descMatch = text.match(/DESCRI[ÇC][ÃA]O\s*:\s*([\s\S]+?)(?=\n\s*(PLACA|EXPRESS[ÃA]O)\s*:|$)/i)
+  const descMatch = text.match(/DESCRI[ÇC][ÃA]O\s*:\s*([\s\S]+?)(?=\n\s*(PLACA|EXPRESS[ÃA]O|ATIVIDADE)\s*:|$)/i)
   const plateMatch = text.match(/PLACA\s*:\s*([A-Za-z0-9-]+)/i)
   const exprMatch = text.match(/EXPRESS[ÃA]O\s*:\s*([^\n]+)/i)
+  const actMatch = text.match(/ATIVIDADE\s*:\s*([^\n]+)/i)
   const name = nameMatch?.[1]?.replace(/[*#]+/g, ' ').replace(/\s+/g, ' ').trim()
   const caption = (descMatch?.[1] || text).replace(/[*#]+/g, ' ').replace(/\s+/g, ' ').trim()
   const plateRaw = plateMatch?.[1]?.trim()
@@ -138,7 +141,10 @@ function parseGemini(text: string): { name?: string; caption: string; plate?: st
   const exprRaw = exprMatch?.[1]?.trim()
   const expression =
     exprRaw && !/^(n[aã]o|none|nenhuma)$/i.test(exprRaw) ? exprRaw : undefined
-  return { name, caption, plate, expression }
+  const actRaw = actMatch?.[1]?.trim()
+  const activity =
+    actRaw && !/^(n[aã]o|none|nenhuma)$/i.test(actRaw) ? actRaw : undefined
+  return { name, caption, plate, expression, activity }
 }
 
 export async function generateDigitalIllustration(

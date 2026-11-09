@@ -22,6 +22,7 @@ interface ScanInfo {
   format: string
   caption: string
   expression: string | null
+  activity: string | null
   provider: string
   status: string
   plate: string | null
@@ -167,9 +168,13 @@ export default function CameraScan() {
       }
 
       const finalName = knowledgeMatch ? knowledgeMatch.name : (rec.name?.trim() || ocrClean || fp.name)
+      const personIdentified = identifiedPersons.length > 0
+      const activityText = rec.activity?.trim() || null
       const finalCaption = knowledgeMatch
         ? (knowledgeMatch.description || rec.caption)
-        : rec.caption
+        : personIdentified && activityText
+          ? `${rec.caption}\n\nAtividade: ${activityText}`
+          : rec.caption
 
       setInfo({
         name: finalName,
@@ -177,6 +182,7 @@ export default function CameraScan() {
         format,
         caption: finalCaption,
         expression: rec.expression?.trim() || null,
+        activity: activityText,
         provider: rec.provider,
         status: rec.status,
         plate,
@@ -309,6 +315,12 @@ export default function CameraScan() {
                     <input value={info.expression} readOnly />
                   </>
                 )}
+                {info.activity && (
+                  <>
+                    <label>Atividade / Ação</label>
+                    <input value={info.activity} readOnly />
+                  </>
+                )}
                 {info.provider === 'mock' && (
                   <p className="desc" style={{ color: 'var(--danger)' }}>
                     ⚠️ Reconhecimento por IA indisponível (modo local) [v3]. Verifique a conexão com a
@@ -328,33 +340,6 @@ export default function CameraScan() {
               </div>
             )}
           </section>
-
-          {info?.identifiedPersons && info.identifiedPersons.length > 0 && (
-            <section className="panel">
-              <h2>Pessoa identificada</h2>
-              <div className="form">
-                {info.identifiedPersons.map((p) => (
-                  <div key={p.id} className="factory-box" style={{ marginTop: 0 }}>
-                    {p.dataUrl && (
-                      <img
-                        src={p.dataUrl}
-                        alt={p.name}
-                        className="result-img"
-                        style={{ maxHeight: 160 }}
-                      />
-                    )}
-                    <p className="desc">
-                      <strong>{p.name}</strong>
-                    </p>
-                    {p.description && <p className="desc">{p.description}</p>}
-                    <small style={{ color: 'var(--muted)' }}>
-                      Reconhecimento facial (base de conhecimento local).
-                    </small>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
 
           {info?.knowledgeMatch && (
             <section className="panel">
@@ -396,6 +381,11 @@ export default function CameraScan() {
                       <strong>{p.name}</strong>
                     </p>
                     {p.description && <p className="desc">{p.description}</p>}
+                    {info?.activity && (
+                      <p className="desc">
+                        <strong>Atividade:</strong> {info.activity}
+                      </p>
+                    )}
                     <small style={{ color: 'var(--muted)' }}>
                       Reconhecimento facial (base de conhecimento local).
                     </small>
