@@ -20,6 +20,7 @@ interface ScanInfo {
   caption: string
   expression: string | null
   provider: string
+  status: string
   plate: string | null
   factory: FactoryProduct | null
 }
@@ -148,6 +149,7 @@ export default function CameraScan() {
         caption: rec.caption,
         expression: rec.expression?.trim() || null,
         provider: rec.provider,
+        status: rec.status,
         plate,
         factory: hasImage ? fp : null,
       })
@@ -288,6 +290,9 @@ export default function CameraScan() {
                   <p className="desc" style={{ color: 'var(--danger)' }}>
                     ⚠️ Reconhecimento por IA indisponível (modo local). Verifique a conexão com a
                     internet e as chaves de IA no Vercel. O resultado acima é genérico.
+                    {info.status && info.status !== 'fallback' && (
+                      <><br />Detalhe: {info.status}</>
+                    )}
                   </p>
                 )}
               </div>

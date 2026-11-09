@@ -55,10 +55,15 @@ export async function recognizeProduct(dataUrl: string): Promise<Recognition> {
           if (text) {
             const parsed = parseGemini(text)
             return buildRecognition(parsed.caption, `gemini:${gm}`, 'ok', parsed.name, parsed.plate, parsed.expression)
+          } else {
+            console.warn(`Gemini ${gm} retornou resposta vazia`)
+            errors.push(`gemini:${gm}:resposta-vazia`)
           }
+        } else {
+          const errBody = await res.text().catch(() => '')
+          console.warn(`Gemini ${gm} failed`, res.status, errBody.slice(0, 300))
+          errors.push(`gemini:${gm}:${res.status}`)
         }
-        console.warn(`Gemini ${gm} failed`, res.status)
-        errors.push(`gemini:${gm}:${res.status}`)
       } catch (e) {
         console.warn(`Gemini ${gm} error`, e)
         errors.push(`gemini:${gm}:erro-rede`)
