@@ -111,17 +111,17 @@ export default function CameraScan() {
     setInfo(null)
     setError(null)
     try {
-      setStage('Reconhecendo o produto...')
+      setStage('Analisando...')
       const rec = await recognizeProduct(dataUrl)
 
-      setStage('Lendo rótulo (OCR)...')
+      setStage('Analisando imagem...')
       const ocrRes = await extractTextFromImage(dataUrl)
 
       const avg = await averageColor(dataUrl)
       const dims = await imageSize(dataUrl)
       const format = `${dims.w} x ${dims.h} px`
 
-      setStage('Buscando embalagem e placa...')
+      setStage('Analisando imagem...')
       const context = `${rec.name} ${rec.caption} ${ocrRes}`
       const likelyVehicle = looksLikeVehicle(context)
       const ocrTokens = ocrRes.trim().split(/\s+/).filter(Boolean)
@@ -224,7 +224,7 @@ export default function CameraScan() {
       <div className="grid two">
         {/* Painel 1 — imagem */}
         <section className="panel">
-          <h2>1. Imagem do produto</h2>
+          <h2>1. Imagem carregada</h2>
           <div className="camera-zone">
             {image ? (
               <img src={image} alt="produto" className="camera-frame" />
@@ -269,7 +269,7 @@ export default function CameraScan() {
         {/* Painel 2 + 3 — descrição e embalagem */}
         <div className="stack">
           <section className="panel">
-            <h2>2. Descrição do objeto</h2>
+            <h2>2. Descrição da imagem</h2>
             {info ? (
               <div className="form">
                 <label>Nome do objeto</label>
